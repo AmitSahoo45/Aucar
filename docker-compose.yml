@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=AmitSahoo@454545
+    ports:
+      - 6969:6969
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
