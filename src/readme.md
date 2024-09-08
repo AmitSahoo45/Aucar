@@ -56,3 +56,43 @@ dotnet watch
 All these activites must be done inside the src/AuctionService folder when working from terminal. 
 
 
+--------------------
+To add a new service, within the aucar car folder type this command
+ dotnet new webapi -o src/SearchService -controllers
+
+After this the search service will be added to the src folder. 
+Later write this command
+
+```bash
+dotnet sln add src/SearchService
+```
+
+This will add the search service to the sln file.
+
+After everything, just build using
+```bash
+dotnet build
+```
+
+and run using
+```bash
+dotnet watch
+```
+
+Sometimes while doing running the docker file 
+```bash
+ docker compose up -d
+``` 
+
+just check if you are logged in to docker or not
+
+```bash
+docker login
+```
+
+To use MongoDb for VSCode 
+open MongoDB
+Advance Connecttion
+Open From 
+put your credentials from docker compose file
+
