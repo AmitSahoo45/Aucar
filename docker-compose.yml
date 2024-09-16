@@ -14,4 +14,12 @@ services:
       - 27017:27017
     volumes:
       - /data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine # we are using like this for message broker itself, and management utility so that we can see whats going on inside the message broker. 
+    ports:
+      - 5672:5672 # both external and internal port
+      - 15672:15672  # additional port so that we can access the management service which we can also access in the browser
+      # it does require authentication, but if we dont give any then it will be using guest and guest. 
+
       

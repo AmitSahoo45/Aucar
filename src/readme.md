@@ -96,3 +96,14 @@ Advance Connecttion
 Open From 
 put your credentials from docker compose file
 
+Create the class library using the following command
+```bash
+dotnet new classlib -o src/Contracts
+```
+
+To add the sln to aucar, we will use 
+```bash
+dotnet sln add src/Contracts
+```
+
+
