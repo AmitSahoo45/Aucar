@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Entities;
 using SearchService.Models;
@@ -10,43 +11,55 @@ namespace SearchService.Controllers;
 public class SearchController : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<Item>>> SearchItems([FromQuery] SearchParams sp)
+    public async Task<ActionResult<List<Item>>> SearchItems([FromQuery] SearchParams searchParams)
     {
-        var query = DB.PagedSearch<Item, Item>(); // Item, Item coz ordering at Orderby "make" was throwing error 
+        var query = DB.PagedSearch<Item, Item>();
 
-        if (!string.IsNullOrEmpty(sp.searchItem))
-            query.Match(Search.Full, sp.searchItem).SortByTextScore();
-
-        query = sp.OrderBy switch
+        if (!string.IsNullOrEmpty(searchParams.SearchTerm))
         {
-            "make" => query.Sort(x => x.Ascending(a => a.Make)), // sorted by alphabetical order
-            "new" => query.Sort(x => x.Descending(a => a.CreatedAt)), // ordered added more recently
-            _ => query.Sort(x => x.Ascending(a => a.AuctionEnd)) // Default sorting
+            query.Match(Search.Full, searchParams.SearchTerm).SortByTextScore();
+        }
+
+        query = searchParams.OrderBy switch
+        {
+            "make" => query.Sort(x => x.Ascending(x => x.Make))
+                .Sort(x => x.Ascending(a => a.Model)),
+            "new" => query.Sort(x => x.Descending(x => x.CreatedAt)),
+            _ => query.Sort(x => x.Ascending(x => x.AuctionEnd))
         };
 
-        query = sp.FilterBy switch
+        if (!string.IsNullOrEmpty(searchParams.FilterBy))
         {
-            "finished" => query.Match(x => x.AuctionEnd < DateTime.UtcNow), // Auctions that have ended
-            "endingSoon" => query.Match(x => x.AuctionEnd > DateTime.UtcNow.AddHours(6) && x.AuctionEnd > DateTime.UtcNow), // Auctions that are ending soon
-            _ => query.Match(x => x.AuctionEnd > DateTime.UtcNow) // Default filter
-        };
+            query = searchParams.FilterBy switch
+            {
+                "finished" => query.Match(x => x.AuctionEnd < DateTime.UtcNow),
+                "endingSoon" => query.Match(x =>
+                    x.AuctionEnd < DateTime.UtcNow.AddHours(6)
+                        && x.AuctionEnd > DateTime.UtcNow),
+                _ => query.Match(x => x.AuctionEnd > DateTime.UtcNow) // live
+            };
+        }
 
-        if (!string.IsNullOrEmpty(sp.Seller))
-            query.Match(x => x.Seller == sp.Seller);
+        if (!string.IsNullOrEmpty(searchParams.Seller))
+        {
+            query.Match(x => x.Seller == searchParams.Seller);
+        }
 
-        if (!string.IsNullOrEmpty(sp.Winner)) 
-            query.Match(x => x.Winner == sp.Winner);
+        if (!string.IsNullOrEmpty(searchParams.Winner))
+        {
+            query.Match(x => x.Winner == searchParams.Winner);
+        }
 
-        query.PageNumber(sp.pageNumber)
-            .PageSize(sp.pageSize);
+        query.PageNumber(searchParams.PageNumber);
+        query.PageSize(searchParams.PageSize);
 
-        var res = await query.ExecuteAsync();
+        var result = await query.ExecuteAsync();
 
         return Ok(new
         {
-            res = res.Results,
-            pageCount = res.PageCount,
-            totalCount = res.TotalCount
+            results = result.Results,
+            pageCount = result.PageCount,
+            totalCount = result.TotalCount
         });
     }
 }

@@ -2,6 +2,8 @@ using AuctionService.Data;
 using AuctionService.DTOs;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,11 +15,14 @@ public class AuctionsController : ControllerBase
 {
     private readonly AuctionDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public AuctionsController(AuctionDbContext context, IMapper mapper)
+    public AuctionsController(AuctionDbContext context, IMapper mapper,
+    IPublishEndpoint publishEndpoint) // ipublish will help us to publish that message. 
     {
         _context = context;
         _mapper = mapper;
+        _publishEndpoint = publishEndpoint;
     }
 
     [HttpGet]
@@ -56,7 +61,13 @@ public class AuctionsController : ControllerBase
 
         _context.Auctions.Add(auction);
         // this is just getting saved in the memory but not in the database and entity framework is tracking this because it's an entity. 
+        var newAuction = _mapper.Map<AuctionDto>(auction);
+        // publish the message
+        await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
+        // after the auction is created a message needs to be published. 
+        // in order to publish the created auction, we need to map it to an auction created object. -> this is done in mapping profiles.cs of this project
 
+        
         bool result = await _context.SaveChangesAsync() > 0;
 
         if (!result)
@@ -65,7 +76,7 @@ public class AuctionsController : ControllerBase
         return CreatedAtAction(
             nameof(GetAuctionById),
             new { auction.Id },
-            _mapper.Map<AuctionDto>(auction)
+            newAuction
         );
     }
 

@@ -14,6 +14,12 @@ builder.Services.AddDbContext<AuctionDbContext>(options =>
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddMassTransit(x =>
 {
+    x.AddEntityFrameworkOutbox<AuctionDbContext>(options => {
+        options.QueryDelay = TimeSpan.FromSeconds(10); // if the service bus is available it will be delivered immediately else it will look into the outbox every 10 seconds if there's anything that hasn't been delivered yet once the service bus is available.
+        options.UsePostgres();
+        options.UseBusOutbox();
+    });
+
     x.UsingRabbitMq((context, cfg /*cfg is the configurations*/) =>
     {
         cfg.ConfigureEndpoints(context);
@@ -21,10 +27,6 @@ builder.Services.AddMassTransit(x =>
 });
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
-// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
