@@ -19,11 +19,16 @@ builder.Services.AddMassTransit(x =>
     // because if in another service a consumer is created with the similar name
     // then some extra stuff needs to be added to the name so thats it different from the other service.
     // To achieve that we will be using an extra bit of configuration to set the endpoint. 
-
-    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false)); // This false represents do we want to include the namespace with the formatted name. 
-
-    x.UsingRabbitMq((context, cfg /*cfg is the configurations*/) =>
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
+    x.UsingRabbitMq((context, cfg) =>
     {
+        // This policy is added here so that it can retry the message if it fails to send it to the consumer.
+        // this is going to retry for 5 times with an interval of 10 seconds.
+        cfg.ReceiveEndpoint("search-auction-created", e =>
+        {
+            e.UseMessageRetry(r => r.Interval(5, 5));
+            e.ConfigureConsumer<AuctionCreatedConsumer>(context);
+        });
         cfg.ConfigureEndpoints(context);
     });
 });

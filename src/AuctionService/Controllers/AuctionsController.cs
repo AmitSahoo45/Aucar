@@ -1,5 +1,6 @@
 using AuctionService.Data;
 using AuctionService.DTOs;
+using AuctionService.Entities;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Contracts;
@@ -26,17 +27,15 @@ public class AuctionsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string date)
+    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string? date)
     {
-        var query = _context.Auctions.OrderBy(a => a.Item.Make)
-            .AsQueryable(); // just  making sure this is of type IQueryable
-                            // Why is it required? Since we have OrderBy, it becomes IOrderedQueryable
-                            // So we do need to convert it to IQueryable first.
+        var query = _context.Auctions.OrderBy(x => x.Item.Make).AsQueryable();
 
         if (!string.IsNullOrEmpty(date))
-            query = query.Where(a => a.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
+            query = query.Where(x => x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
 
-        return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync();
+        return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
     [HttpGet("{id}")]
@@ -53,11 +52,11 @@ public class AuctionsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<AuctionDto>> CreateAuction([FromBody] CreateAuctionDto auctionDto)
+    public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto createAuctionDto)
     {
-        var auction = _mapper.Map<Auction>(auctionDto); // map the AuctionDto into an Auction entity
+        var auction = _mapper.Map<Auction>(createAuctionDto); // map the AuctionDto into an Auction entity
         // TODO: add current user as seller
-        auction.Seller = "test";
+        auction.Seller = "test seller";
 
         _context.Auctions.Add(auction);
         // this is just getting saved in the memory but not in the database and entity framework is tracking this because it's an entity. 

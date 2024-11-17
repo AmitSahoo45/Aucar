@@ -20,10 +20,12 @@ public class AuctionCreatedConsumer : IConsumer<AuctionCreated>
     // the auction created needs to be mapped suucessfully into an item so we can update our database
     public async Task Consume(ConsumeContext<AuctionCreated> context)
     {
-        Console.WriteLine("Auction created event received -> " + context.Message.Id);
-
+        Console.WriteLine("--> Consuming Auction Created: " + context.Message.Id);
         var item = _mapper.Map<Item>(context.Message);
 
+        if (item.Model == "Foo")
+            throw new ArgumentException("Cannot sell cars with name of Foo");
+            
         await item.SaveAsync();
     }
 }
