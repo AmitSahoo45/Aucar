@@ -107,3 +107,4 @@ dotnet sln add src/Contracts
 ```
 
 
+dotnet sln add src/IdentityService

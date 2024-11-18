@@ -66,7 +66,7 @@ public class AuctionsController : ControllerBase
         // after the auction is created a message needs to be published. 
         // in order to publish the created auction, we need to map it to an auction created object. -> this is done in mapping profiles.cs of this project
 
-        
+
         bool result = await _context.SaveChangesAsync() > 0;
 
         if (!result)
@@ -98,6 +98,8 @@ public class AuctionsController : ControllerBase
         auction.Item.Year = updateAutionDto.Year ?? auction.Item.Year;
         auction.Item.Mileage = updateAutionDto.Mileage ?? auction.Item.Mileage;
 
+        await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
+
         var result = await _context.SaveChangesAsync() > 0;
 
         if (result)
@@ -119,6 +121,8 @@ public class AuctionsController : ControllerBase
 
         // TODO: Check Seller == username
         // ToDO: If there are already some bids, then don't delete. Return error
+
+        await _publishEndpoint.Publish<AuctionDeleted>(new { Id = auction.Id.ToString() });
 
         _context.Auctions.Remove(auction);
         var res = _context.SaveChanges() > 0;

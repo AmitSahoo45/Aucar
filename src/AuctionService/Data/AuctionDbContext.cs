@@ -21,5 +21,4 @@ public class AuctionDbContext : DbContext
     // this will add 3 tables to the postgres db. 
     // this will act as the outbox. 
     // Thats why a migration is also created for this. 
-
 }
