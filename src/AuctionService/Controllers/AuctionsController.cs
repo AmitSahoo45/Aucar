@@ -5,6 +5,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Contracts;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,12 +52,12 @@ public class AuctionsController : ControllerBase
         return _mapper.Map<AuctionDto>(auction);
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto createAuctionDto)
     {
         var auction = _mapper.Map<Auction>(createAuctionDto); // map the AuctionDto into an Auction entity
-        // TODO: add current user as seller
-        auction.Seller = "test seller";
+        auction.Seller = User.Identity.Name; // setting the username to the seller property of the auction entity
 
         _context.Auctions.Add(auction);
         // this is just getting saved in the memory but not in the database and entity framework is tracking this because it's an entity. 
@@ -79,7 +80,7 @@ public class AuctionsController : ControllerBase
         );
     }
 
-
+    [Authorize]
     [HttpPatch("{id}")]
     public async Task<ActionResult> UpdateAuction(Guid id, UpdateAutionDto updateAutionDto)
     {
@@ -89,7 +90,8 @@ public class AuctionsController : ControllerBase
 
         if (auction == null) return NotFound();
 
-        // Todo : check seller == user
+        if (auction.Seller != User.Identity.Name)
+            return Forbid();
         // TODO: If there are already some bids, then don't update. Return error
 
         auction.Item.Make = updateAutionDto.Make ?? auction.Item.Make;
@@ -108,7 +110,7 @@ public class AuctionsController : ControllerBase
         return BadRequest("Oops!! Could not update the auction. Please try again.");
     }
 
-
+[Authorize]
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteAuction(Guid id)
     {
@@ -118,8 +120,9 @@ public class AuctionsController : ControllerBase
         if (auction == null)
             return NotFound();
 
-
         // TODO: Check Seller == username
+        if (auction.Seller != User.Identity.Name)
+            return Forbid();
         // ToDO: If there are already some bids, then don't delete. Return error
 
         await _publishEndpoint.Publish<AuctionDeleted>(new { Id = auction.Id.ToString() });

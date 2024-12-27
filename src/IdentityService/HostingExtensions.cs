@@ -1,6 +1,7 @@
 using Duende.IdentityServer;
 using IdentityService.Data;
 using IdentityService.Models;
+using IdentityService.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -34,27 +35,26 @@ internal static class HostingExtensions
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
             .AddInMemoryClients(Config.Clients)
-            .AddAspNetIdentity<ApplicationUser>();
-        
-        builder.Services.AddAuthentication()
-            .AddGoogle(options =>
-            {
-                options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+            .AddAspNetIdentity<ApplicationUser>()
+            .AddProfileService<CustomProfileService>(); // we create a new custom profile service, extract the username & name and add it to the claims
 
-                // register your IdentityServer with Google at https://console.developers.google.com
-                // enable the Google+ API
-                // set the redirect URI to https://localhost:5001/signin-google
-                options.ClientId = "copy client ID from Google here";
-                options.ClientSecret = "copy client secret from Google here";
-            });
+        // since we are running identity server in the http, we need to make some changes to the cookies config so that we dont use the same site strict when we rreturn a cookie from identity server. 
+
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.SameSite = SameSiteMode.Lax;
+        });
+        // this is required to get the functionality working when using HTTP
+
+        builder.Services.AddAuthentication();
 
         return builder.Build();
     }
-    
+
     public static WebApplication ConfigurePipeline(this WebApplication app)
-    { 
+    {
         app.UseSerilogRequestLogging();
-    
+
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -64,7 +64,7 @@ internal static class HostingExtensions
         app.UseRouting();
         app.UseIdentityServer();
         app.UseAuthorization();
-        
+
         app.MapRazorPages()
             .RequireAuthorization();
 

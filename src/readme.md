@@ -106,5 +106,21 @@ To add the sln to aucar, we will use
 dotnet sln add src/Contracts
 ```
 
-
 dotnet sln add src/IdentityService
+
+--------------------
+To fix this issue:
+dotnet ef migrations add "InitialCreate" -o Data/Migrations 
+Build started...
+Build succeeded.
+The Entity Framework tools version '7.0.7' is older than that of the runtime '8.0.4'. Update the tools for the latest features and bug fixes. See https://aka.ms/AAc1fbw for more information.
+[20:18:58 INF] Starting up
+[20:19:01 Information] 
+Shut down complete
+
+Done. To undo this action, use 'ef migrations remove'
+
+We can use the following command:
+```bash
+dotnet tool update dotnet-ef -g
+```
