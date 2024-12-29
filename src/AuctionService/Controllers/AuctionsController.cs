@@ -110,7 +110,7 @@ public class AuctionsController : ControllerBase
         return BadRequest("Oops!! Could not update the auction. Please try again.");
     }
 
-[Authorize]
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteAuction(Guid id)
     {
