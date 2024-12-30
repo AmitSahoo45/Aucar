@@ -71,7 +71,7 @@ services:
       - postgres
 
   gateway-svc:
-    image: trycatchlearn/gateway-svc:latest
+    image: aksabar/gateway-svc:latest
     build:
       context: .
       dockerfile: src/GatewayService/Dockerfile
