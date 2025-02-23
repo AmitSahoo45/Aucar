@@ -26,8 +26,8 @@ public class BidPlacedConsumer : IConsumer<BidPlaced>
             && context.Message.Amount > auction.CurrentHighBid)
         {
             auction.CurrentHighBid = context.Message.Amount;
+            await _dbContext.SaveChangesAsync();
         }
 
-        await _dbContext.SaveChangesAsync();
     }
 }

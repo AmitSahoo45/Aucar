@@ -1,6 +1,7 @@
 using AutoMapper;
 using BiddingService.DTOs;
 using BiddingService.Models;
+using Contracts;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,28 +14,37 @@ namespace BiddingService.Controllers;
 public class BidsController : ControllerBase
 {
     private readonly IMapper _mapper;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public BidsController(IMapper mapper)
+    public BidsController(IMapper mapper, IPublishEndpoint publishEndpoint)
     {
         _mapper = mapper;
+        _publishEndpoint = publishEndpoint;
     }
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<Bid>> PlaceBid(string auctionId, int amount)
+    public async Task<ActionResult<BidDto>> PlaceBid(string auctionId, int amount)
     {
         try
         {
             var auction = await DB.Find<Auction>().OneAsync(auctionId);
 
+            // if (auction == null)
+            // {
+            //     auction = grpcClient.GetAuction(auctionId);
+
+            //     if (auction == null) return BadRequest("Cannot accept bids on this auction at this time");
+            // }
+
             if (auction == null)
-            {
-                // Todo : check with auction service if that has auction
                 return NotFound();
-            }
+            // Todo : check with auction service if that has auction
 
             if (auction.Seller == User.Identity.Name)
                 return BadRequest("You can't bid on your own auction");
+
+            if (User.Identity?.Name == null) return Unauthorized();
 
             var bid = new Bid()
             {
@@ -62,6 +72,8 @@ public class BidsController : ControllerBase
             }
 
             await DB.SaveAsync(bid);
+
+            await _publishEndpoint.Publish(_mapper.Map<BidPlaced>(bid));
 
             return Ok(_mapper.Map<BidDto>(bid));
         }

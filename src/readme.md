@@ -124,3 +124,5 @@ We can use the following command:
 ```bash
 dotnet tool update dotnet-ef -g
 ```
+
+docker compose build auction-svc
