@@ -126,3 +126,9 @@ dotnet tool update dotnet-ef -g
 ```
 
 docker compose build auction-svc
+
+ dotnet new web -o src/NotificationService
+
+ dotnet sln add src/NotificationService
+
+ 
