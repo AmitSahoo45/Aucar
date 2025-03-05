@@ -15,14 +15,11 @@ COPY src/NotificationService/NotificationService.csproj src/NotificationService/
 # Restore package deps
 RUN dotnet restore aucar.sln
 
-# Copy the app folders over
-COPY src/BiddingService src/BiddingService
-COPY src/Contracts src/Contracts
-WORKDIR /app/src/BiddingService
+COPY src/GatewayService src/GatewayService
+WORKDIR /app/src/GatewayService
 RUN dotnet publish -c Release -o /app/src/out
 
-# Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/src/out .
-ENTRYPOINT [ "dotnet", "BiddingService.dll" ]
+ENTRYPOINT [ "dotnet", "GatewayService.dll" ]
