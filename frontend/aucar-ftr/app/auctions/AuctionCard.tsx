@@ -18,7 +18,9 @@ export default function AuctionCard({ auction }: Props) {
                     <CountdownTimer auctionEnd={auction.auctionEnd} />
                 </div>
                 <div className='absolute top-2 right-2'>
-                    <CurrentBid />
+                    <CurrentBid 
+                        reservePrice={auction.reservePrice} 
+                        amount={auction.currentHighBid}/>
                 </div>
             </div>
             <div className='flex justify-between items-center mt-4'>

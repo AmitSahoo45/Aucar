@@ -1,5 +1,5 @@
 {
-  "name": "aucar-ftr",
+  "name": "web-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",
-    "axios": "^1.7.9",
     "date-fns": "^3.6.0",
     "flowbite-react": "^0.10.1",
     "next": "14.2.5",
